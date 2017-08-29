@@ -1,0 +1,12 @@
+# ctags file
+tags
+
+# temporary files
+*.swp
+*.swo
+*.swn
+*.swm
+*~
+*.bak
+*.ignore
+
