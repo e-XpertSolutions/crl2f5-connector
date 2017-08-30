@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -37,6 +38,8 @@ B6LgKO92SkGoL376RBzINiuZr/Esd3b4nv4=
 
 func makeBigIPHandler(disable string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		switch path := r.URL.Path; path {
 		case "/mgmt/tm/ltm/profile/client-ssl/clientssl":
 			switch method := r.Method; method {
@@ -81,25 +84,40 @@ func makeBigIPHandler(disable string) http.Handler {
 		// Dynamic routes
 		default:
 			switch {
-			case strings.HasPrefix(path, "/mgmt/shared/file-transfer/uploads/"):
+			case strings.HasPrefix(path, "/mgmt/shared/file-transfer/uploads"):
 				switch method := r.Method; method {
 				case "POST":
 					w.Write([]byte(uploadResp))
 				default:
 					http.Error(w, fmt.Sprintf("unsupported method %q for %q", method, path), http.StatusBadRequest)
 				}
-			case strings.HasPrefix(path, "/mgmt/tm/sys/file/ssl-crl/"):
+			case strings.HasPrefix(path, "/mgmt/tm/sys/file/ssl-crl"):
 				if disable == "ssl-crl" {
 					http.Error(w, "disabled", http.StatusNotFound)
 					return
 				}
+				var filename string
 				switch method := r.Method; method {
-				case "POST", "PUT": // PUT?
-					filename := path[strings.LastIndex(path, "/")+1:]
-					w.Write([]byte(fmt.Sprintf(`{"remainingByteCount":0,"usedChunks":{"0":930},"totalByteCount":930,"localFilePath":"/var/config/rest/downloads/%s","temporaryFilePath":"/var/config/rest/downloads/tmp/%s","generation":0,"lastUpdateMicros":1503997621775731}`, filename, filename)))
+				case "POST":
+					data := make(map[string]string)
+					dec := json.NewDecoder(r.Body)
+					if err := dec.Decode(&data); err != nil {
+						http.Error(w, "malformed request data: "+err.Error(), http.StatusBadRequest)
+						return
+					}
+					var ok bool
+					filename, ok = data["name"]
+					if !ok {
+						http.Error(w, "missing name in request data", http.StatusBadRequest)
+						return
+					}
+				case "PUT": // PUT?
+					filename = path[strings.LastIndex(path, "/")+1:]
 				default:
 					http.Error(w, fmt.Sprintf("unsupported method %q for %q", method, path), http.StatusBadRequest)
+					return
 				}
+				w.Write([]byte(fmt.Sprintf(`{"remainingByteCount":0,"usedChunks":{"0":930},"totalByteCount":930,"localFilePath":"/var/config/rest/downloads/%s","temporaryFilePath":"/var/config/rest/downloads/tmp/%s","generation":0,"lastUpdateMicros":1503997621775731}`, filename, filename)))
 			default:
 				http.Error(w, fmt.Sprintf("unsupported path %q", path), http.StatusNotFound)
 			}
@@ -125,6 +143,7 @@ func testWorkerDoHappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatal("cannot instanciate f5 basic client: ", err)
 	}
+	f5Client.DisableCertCheck()
 
 	tsCA := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(crlFile))
