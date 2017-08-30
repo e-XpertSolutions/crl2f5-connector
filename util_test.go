@@ -129,8 +129,8 @@ func testFetchCRLWithValidCRL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetchCRL: unexpected error %q", err.Error())
 	}
-	if !bytes.Equal(crl, derCRL) {
-		t.Errorf("fetchCRL: got \"%v\"; want \"%v\"", crl, derCRL)
+	if !bytes.Equal(crl, pemCRL) {
+		t.Errorf("fetchCRL: got \"%s\"; want \"%s\"", crl, pemCRL)
 	}
 }
 
@@ -143,8 +143,8 @@ func testFetchCRLWithValidPEMCRL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetchCRL: unexpected error %q", err.Error())
 	}
-	if !bytes.Equal(crl, derCRL) {
-		t.Errorf("fetchCRL: got \"%v\"; want \"%v\"", crl, derCRL)
+	if !bytes.Equal(crl, pemCRL) {
+		t.Errorf("fetchCRL: got \"%s\"; want \"%s\"", crl, pemCRL)
 	}
 }
 

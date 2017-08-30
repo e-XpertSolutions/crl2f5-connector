@@ -15,7 +15,8 @@ import (
 // not expired yet, and returns it as raw slice of bytes so that it can be
 // forwarded right after.
 //
-// If the CRL is in PEM format, it is converted into raw ASN.1 DER.
+// No matter what format is returned by the CRL distribution point, the function
+// will return a PEM encoded CRL.
 func fetchCRL(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -32,16 +33,22 @@ func fetchCRL(url string) ([]byte, error) {
 		return nil, errors.New("cannot read crl: " + err.Error())
 	}
 
-	var derCRL []byte
+	// We need both, a DER encoded CRL and a PEM one. The former is required to
+	// be parsed in order to validate that the CRL is valid while the latter
+	// will  be returned by the function.
+	var derCRL, pemCRL []byte
 	if isPEM(rawCRL) {
 		derCRL, err = convertPEMToDER(rawCRL)
 		if err != nil {
 			return nil, errors.New("cannot convert crl from pem to der: " + err.Error())
 		}
+		pemCRL = rawCRL
 	} else {
 		derCRL = rawCRL
+		pemCRL = pem.EncodeToMemory(&pem.Block{Type: "X509 CRL", Bytes: derCRL})
 	}
 
+	// TODO(gilliek): move this part into an external function
 	crl, err := x509.ParseDERCRL(derCRL)
 	if err != nil {
 		return nil, errors.New("cannot parse crl: " + err.Error())
@@ -50,7 +57,7 @@ func fetchCRL(url string) ([]byte, error) {
 		return nil, errors.New("crl has expired")
 	}
 
-	return derCRL, nil
+	return pemCRL, nil
 }
 
 // isPEM reports whether data contains a PEM encoded CRL.
