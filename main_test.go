@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
-	"reflect"
 	"testing"
 )
 
@@ -79,7 +78,7 @@ func TestUsage(t *testing.T) {
 		t.Fatal("usage(): expected error, got nil")
 	}
 	if _, ok := err.(*exec.ExitError); !ok {
-		t.Fatalf("usage(): expected error of type exec.ExitError, got %v", reflect.TypeOf(err))
+		t.Fatalf("usage(): expected error of type exec.ExitError, got %T", err)
 	}
 
 	if gotUsage := stderrBuf.String(); gotUsage != wantUsage {
