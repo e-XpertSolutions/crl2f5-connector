@@ -70,7 +70,10 @@ func (w *worker) do(f5Client *f5.Client) error {
 		return errors.New("cannot get client ssl: " + err.Error())
 	}
 
-	cfg.CRLFile = crlName
+	// .crl extension is automatically added while uploading the file, therefore
+	// we need to concatenate it to crlName so thtat the client-ssl API can
+	// retrieve it.
+	cfg.CRLFile = crlName + ".crl"
 
 	if err := ltmClient.ProfileClientSSL().Edit(w.profileName, *cfg); err != nil {
 		return errors.New("cannot modify client ssl: " + err.Error())
