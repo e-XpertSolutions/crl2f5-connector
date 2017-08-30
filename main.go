@@ -87,12 +87,22 @@ func main() {
 		f5Client.DisableCertCheck()
 	}
 
+	p := new(pool)
+	for _, crlCfg := range cfg.CRL {
+		p.addWorker(crlCfg)
+	}
+	if err := p.startAll(f5Client); err != nil {
+		fatal("cannot start workers: ", err)
+	}
+
 	// Catch OS signal.
 	sigChan := make(chan os.Signal, 2)
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
 	sig := <-sigChan
 	verbose("signal received: ", sig)
+
+	p.stopAll()
 
 	info("bye.")
 }
