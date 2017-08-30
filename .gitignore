@@ -10,3 +10,4 @@ tags
 *.bak
 *.ignore
 
+config.toml
