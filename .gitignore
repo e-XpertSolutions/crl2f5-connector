@@ -11,3 +11,4 @@ tags
 *.ignore
 
 config.toml
+crl2f5-connector
