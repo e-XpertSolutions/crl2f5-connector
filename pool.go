@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -76,11 +77,21 @@ func (w *worker) do(f5Client *f5.Client) error {
 	cfg.CRLFile = crlName + ".crl"
 
 	if err := ltmClient.ProfileClientSSL().Edit(w.profileName, *cfg); err != nil {
-		return errors.New("cannot modify client ssl: " + err.Error())
+		return errors.New("cannot modify client-ssl: " + err.Error())
 	}
 
 	if err := tx.Commit(); err != nil {
 		return err
+	}
+
+	// Now that the transaction has been committed, we verify that everything
+	// worked as intended.
+	cfg, err = ltmClient.ProfileClientSSL().Get(w.profileName)
+	if err != nil {
+		return errors.New("cannot retrieve updated client ssl profile: " + err.Error())
+	}
+	if !strings.HasSuffix(cfg.CRLFile, crlName+".crl") {
+		return errors.New("client-ssl has not been updated with the newly updated crl")
 	}
 
 	return nil
