@@ -9,6 +9,30 @@ import (
 	"github.com/e-XpertSolutions/f5-rest-client/f5"
 )
 
+func TestWorker_Run(t *testing.T) {
+	var totalRequests int
+	tsCA := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		totalRequests++
+		http.Error(w, "acknowledged", http.StatusNotFound)
+	}))
+	defer tsCA.Close()
+
+	w := &worker{
+		url:          tsCA.URL,
+		refreshDelay: 50 * time.Millisecond,
+	}
+
+	w.run(nil, &discardLogger{})
+
+	time.Sleep(200 * time.Millisecond)
+
+	w.stop()
+
+	if totalRequests < 2 {
+		t.Errorf("worker.run(): expected more calls to do() method (got %d)", totalRequests)
+	}
+}
+
 func TestWorker_Do(t *testing.T) {
 	t.Run("Happy Path", testWorkerDoHappyPath)
 	t.Run("Invalid CRL distribution URL", testWorkerDoInvalidURL)
@@ -348,14 +372,14 @@ func testPoolStartAll(t *testing.T) {
 	}
 	f5Client.DisableCertCheck()
 
-	if err := pool.startAll(f5Client); err != nil {
+	if err := pool.startAll(f5Client, &discardLogger{}); err != nil {
 		t.Errorf("pool.startAll: unexpected error %q", err.Error())
 	}
 }
 
 func testPoolStartAllNilClient(t *testing.T) {
 	pool := &pool{}
-	if err := pool.startAll(nil); err == nil {
+	if err := pool.startAll(nil, &discardLogger{}); err == nil {
 		t.Errorf("pool.startAll: expected error, got nil")
 	} else {
 		wantErr := "f5 client is nil"
