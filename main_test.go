@@ -67,7 +67,7 @@ func TestUsage(t *testing.T) {
 		// NOT REACHED
 	}
 
-	cmd := exec.Command(os.Args[0], "-test.run=TestUsage")
+	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
 	cmd.Env = append(os.Environ(), "TEST_USAGE=1")
 
 	stderrBuf := new(bytes.Buffer)
@@ -83,5 +83,93 @@ func TestUsage(t *testing.T) {
 
 	if gotUsage := stderrBuf.String(); gotUsage != wantUsage {
 		t.Errorf("usage():\ngot output:\n\n%s\n\nwant:\n\n%s", gotUsage, wantUsage)
+	}
+}
+
+func TestVersion(t *testing.T) {
+	if os.Getenv("TEST_USAGE") == "1" {
+		version()
+		// NOT REACHED
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
+	cmd.Env = append(os.Environ(), "TEST_USAGE=1")
+
+	stdoutBuf := new(bytes.Buffer)
+	cmd.Stdout = stdoutBuf
+
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("version(): unexpected error %q", err.Error())
+	}
+
+	wantVersion := "crl2f5-connector.test - 1.0.0\n"
+	if gotVersion := stdoutBuf.String(); gotVersion != wantVersion {
+		t.Errorf("version(): got output %q; want %q", gotVersion, wantVersion)
+	}
+}
+
+func TestFatal(t *testing.T) {
+	stderrBuf := new(bytes.Buffer)
+	stderr = stderrBuf
+
+	exit = func(status int) {
+		if status != 1 {
+			t.Errorf("fatal(%q): got exit with status %d; want %d", "test", status, 1)
+		}
+	}
+
+	fatal("test")
+
+	want := "fatal: test\n"
+	if got := stderrBuf.String(); got != want {
+		t.Errorf("fatal(%q): got %q; want %q", "test", got, want)
+	}
+}
+
+func TestVerbose(t *testing.T) {
+	t.Run("Enabled", testVerboseWhenEnabled)
+	t.Run("Disabled", testVerboseWhenDisabled)
+}
+
+func testVerboseWhenEnabled(t *testing.T) {
+	b := true
+	verboseMode = &b
+
+	stdoutBuf := new(bytes.Buffer)
+	stdout = stdoutBuf
+
+	verbose("test")
+
+	want := "verbose: test\n"
+	if got := stdoutBuf.String(); got != want {
+		t.Errorf("verbose(%q): got %q; want %q", "test", got, want)
+	}
+}
+
+func testVerboseWhenDisabled(t *testing.T) {
+	var b bool
+	verboseMode = &b
+
+	stdoutBuf := new(bytes.Buffer)
+	stdout = stdoutBuf
+
+	verbose("test")
+
+	want := ""
+	if got := stdoutBuf.String(); got != want {
+		t.Errorf("verbose(%q): got %q; want %q", "test", got, want)
+	}
+}
+
+func TestInfo(t *testing.T) {
+	stdoutBuf := new(bytes.Buffer)
+	stdout = stdoutBuf
+
+	info("test")
+
+	want := "info: test\n"
+	if got := stdoutBuf.String(); got != want {
+		t.Errorf("info(%q): got %q; want %q", "test", got, want)
 	}
 }
