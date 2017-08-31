@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,19 +34,30 @@ var (
 	printVersion = flag.Bool("version", false, "print current version and exit")
 )
 
+// Hide stderr and stout behind an io.Writer in order to ease testing.
+var (
+	stderr io.Writer = os.Stderr
+	stdout io.Writer = os.Stdout
+)
+
+// Wrap os.Exit call into a variable function in order to ease testing.
+var exit = func(status int) {
+	os.Exit(status)
+}
+
 func fatal(v ...interface{}) {
-	fmt.Fprintln(os.Stderr, "fatal: ", fmt.Sprint(v...))
-	os.Exit(1)
+	fmt.Fprintln(stderr, "fatal:", fmt.Sprint(v...))
+	exit(1)
 }
 
 func verbose(v ...interface{}) {
 	if *verboseMode {
-		fmt.Println("verbose: ", fmt.Sprint(v...))
+		fmt.Fprintln(stdout, "verbose:", fmt.Sprint(v...))
 	}
 }
 
 func info(v ...interface{}) {
-	fmt.Println("info: ", fmt.Sprint(v...))
+	fmt.Fprintln(stdout, "info:", fmt.Sprint(v...))
 }
 
 func main() {
@@ -91,7 +103,7 @@ func main() {
 	for _, crlCfg := range cfg.CRL {
 		p.addWorker(crlCfg)
 	}
-	if err := p.startAll(f5Client); err != nil {
+	if err := p.startAll(f5Client, newLogger(os.Stderr)); err != nil {
 		fatal("cannot start workers: ", err)
 	}
 

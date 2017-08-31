@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,20 +23,20 @@ type worker struct {
 	stopCh chan struct{}
 }
 
-func (w *worker) run(f5Client *f5.Client) {
+func (w *worker) run(f5Client *f5.Client, l logger) {
 	w.stopCh = make(chan struct{})
 	go func() {
 		if err := w.do(f5Client); err != nil {
-			log.Print("error=", err)
+			l.Error(err)
 		}
 		for {
 			select {
 			case <-time.After(w.refreshDelay):
 				if err := w.do(f5Client); err != nil {
-					log.Print("error=", err)
+					l.Error(err)
 				}
 			case <-w.stopCh:
-				log.Print("stop signal received")
+				//log.Print("stop signal received")
 				return
 			}
 		}
@@ -116,12 +115,12 @@ func (p *pool) addWorker(cfg crlConfig) {
 	})
 }
 
-func (p *pool) startAll(f5Client *f5.Client) error {
+func (p *pool) startAll(f5Client *f5.Client, l logger) error {
 	if f5Client == nil {
 		return errors.New("f5 client is nil")
 	}
 	for _, w := range p.workers {
-		w.run(f5Client)
+		w.run(f5Client, l)
 	}
 	return nil
 }
