@@ -111,7 +111,7 @@ func (p *pool) addWorker(cfg crlConfig) {
 		url:          cfg.URL,
 		crlName:      cfg.Name,
 		profileName:  cfg.ProfileName,
-		refreshDelay: time.Duration(cfg.RefreshDelayInHours) * time.Hour,
+		refreshDelay: cfg.RefreshDelay.Duration * time.Hour,
 		validate:     cfg.Validate,
 	})
 }

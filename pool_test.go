@@ -333,10 +333,10 @@ func testPoolStartAll(t *testing.T) {
 
 	pool := &pool{}
 	pool.addWorker(crlConfig{
-		URL:                 tsCA.URL,
-		Name:                "test",
-		ProfileName:         "clientssl",
-		RefreshDelayInHours: 300,
+		URL:          tsCA.URL,
+		Name:         "test",
+		ProfileName:  "clientssl",
+		RefreshDelay: duration{Duration: 300 * time.Hour},
 	})
 	pool.workers[0].refreshDelay = 1 * time.Second
 	defer pool.stopAll()

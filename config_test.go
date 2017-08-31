@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 )
 
 const validConfigFileContent = `[f5]
@@ -18,7 +19,7 @@ ssl_check = false
 url = "http://localhost/test.crl"
 name = "test"
 profile_name = "clientssl"
-refresh_delay = 6
+refresh_delay = "6h"
 validate = true
 `
 const invalidConfigFileContent = `{invalid}`
@@ -71,11 +72,11 @@ func testReadConfigHappyPath(t *testing.T, validFile *os.File) {
 	want.F5.User = "admin"
 	want.F5.Password = "admin"
 	want.CRL = append(want.CRL, crlConfig{
-		URL:                 "http://localhost/test.crl",
-		Name:                "test",
-		ProfileName:         "clientssl",
-		RefreshDelayInHours: 6,
-		Validate:            true,
+		URL:          "http://localhost/test.crl",
+		Name:         "test",
+		ProfileName:  "clientssl",
+		RefreshDelay: duration{Duration: 6 * time.Hour},
+		Validate:     true,
 	})
 	if got := cfg.F5.AuthMethod; got != want.F5.AuthMethod {
 		t.Errorf("readConfig(%q): got auth_method %q; want %q",
@@ -117,9 +118,9 @@ func testReadConfigHappyPath(t *testing.T, validFile *os.File) {
 		t.Errorf("readConfig(%q): got profile_name %q; want %q",
 			path, got, want.CRL[0].ProfileName)
 	}
-	if got := cfg.CRL[0].RefreshDelayInHours; got != want.CRL[0].RefreshDelayInHours {
+	if got := cfg.CRL[0].RefreshDelay; got != want.CRL[0].RefreshDelay {
 		t.Errorf("readConfig(%q): got profile_name %q; want %q",
-			path, got, want.CRL[0].RefreshDelayInHours)
+			path, got, want.CRL[0].RefreshDelay)
 	}
 	if got := cfg.CRL[0].Validate; got != want.CRL[0].Validate {
 		t.Errorf("readConfig(%q): got validate %v; want %v",

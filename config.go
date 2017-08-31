@@ -8,11 +8,11 @@ import (
 )
 
 type crlConfig struct {
-	URL                 string `toml:"url"`
-	Name                string `toml:"name"`
-	ProfileName         string `toml:"profile_name"`
-	RefreshDelayInHours int    `toml:"refresh_delay"`
-	Validate            bool   `toml:"validate"`
+	URL          string   `toml:"url"`
+	Name         string   `toml:"name"`
+	ProfileName  string   `toml:"profile_name"`
+	RefreshDelay duration `toml:"refresh_delay"`
+	Validate     bool     `toml:"validate"`
 }
 
 type config struct {
