@@ -1,0 +1,10 @@
+[Unit]
+Description=A connector that will periodically upload CRL file from CA onto a F5 BigIP server.
+
+[Service]
+Restart=always
+RestartSec=3
+ExecStart=/usr/local/bin/crl2f5-connector -config /usr/local/etc/crl2f5-connector/config.toml
+
+[Install]
+WantedBy=multi-user.target
