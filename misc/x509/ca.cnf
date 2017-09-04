@@ -1,0 +1,2 @@
+[ server_cert ]
+crlDistributionPoints = URI:http://localhost/test.crl
