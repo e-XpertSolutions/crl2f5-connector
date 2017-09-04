@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const validConfigFileContent = `[f5]
+const validConfigFileContent = `[[f5]]
 auth_method = "basic"
 url = "http://localhost/bigip"
 user = "admin"
@@ -67,10 +67,13 @@ func testReadConfigHappyPath(t *testing.T, validFile *os.File) {
 		t.Fatalf("readConfig(%q): unexpected error %q", path, err.Error())
 	}
 	want := config{}
-	want.F5.AuthMethod = "basic"
-	want.F5.URL = "http://localhost/bigip"
-	want.F5.User = "admin"
-	want.F5.Password = "admin"
+	want.F5 = append(want.F5, f5Config{
+		AuthMethod: "basic",
+		URL:        "http://localhost/bigip",
+		User:       "admin",
+		Password:   "admin",
+	},
+	)
 	want.CRL = append(want.CRL, crlConfig{
 		URL:          "http://localhost/test.crl",
 		Name:         "test",
@@ -78,29 +81,29 @@ func testReadConfigHappyPath(t *testing.T, validFile *os.File) {
 		RefreshDelay: duration{Duration: 6 * time.Hour},
 		Validate:     true,
 	})
-	if got := cfg.F5.AuthMethod; got != want.F5.AuthMethod {
+	if got := cfg.F5[0].AuthMethod; got != want.F5[0].AuthMethod {
 		t.Errorf("readConfig(%q): got auth_method %q; want %q",
-			path, got, want.F5.AuthMethod)
+			path, got, want.F5[0].AuthMethod)
 	}
-	if got := cfg.F5.URL; got != want.F5.URL {
+	if got := cfg.F5[0].URL; got != want.F5[0].URL {
 		t.Errorf("readConfig(%q): got url %q; want %q",
-			path, got, want.F5.URL)
+			path, got, want.F5[0].URL)
 	}
-	if got := cfg.F5.User; got != want.F5.User {
+	if got := cfg.F5[0].User; got != want.F5[0].User {
 		t.Errorf("readConfig(%q): got user %q; want %q",
-			path, got, want.F5.User)
+			path, got, want.F5[0].User)
 	}
-	if got := cfg.F5.Password; got != want.F5.Password {
+	if got := cfg.F5[0].Password; got != want.F5[0].Password {
 		t.Errorf("readConfig(%q): got password %q; want %q",
-			path, got, want.F5.Password)
+			path, got, want.F5[0].Password)
 	}
-	if got := cfg.F5.SSLCheck; got != want.F5.SSLCheck {
+	if got := cfg.F5[0].SSLCheck; got != want.F5[0].SSLCheck {
 		t.Errorf("readConfig(%q): got password %v; want %v",
-			path, got, want.F5.SSLCheck)
+			path, got, want.F5[0].SSLCheck)
 	}
-	if got := cfg.F5.LoginProviderName; got != want.F5.LoginProviderName {
+	if got := cfg.F5[0].LoginProviderName; got != want.F5[0].LoginProviderName {
 		t.Errorf("readConfig(%q): got password %q; want %q",
-			path, got, want.F5.LoginProviderName)
+			path, got, want.F5[0].LoginProviderName)
 	}
 	if got := len(cfg.CRL); got != 1 {
 		t.Fatalf("readConfig(%q): got %d crl; want %d",

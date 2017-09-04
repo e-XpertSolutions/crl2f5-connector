@@ -25,7 +25,7 @@ type f5Config struct {
 }
 
 type config struct {
-	F5  f5Config    `toml:"f5"`
+	F5  []f5Config  `toml:"f5"`
 	CRL []crlConfig `toml:"crl"`
 }
 

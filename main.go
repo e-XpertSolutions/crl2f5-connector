@@ -125,17 +125,20 @@ func main() {
 		fatal("no crl distribution point provided in the configuration file")
 	}
 
-	f5Client, err := initF5Client(cfg.F5)
-	if err != nil {
-		fatal(err)
-		fatal("cannot initialize f5 client: ", err)
+	var f5Clients []*f5.Client
+	for _, f5Cfg := range cfg.F5 {
+		f5Client, err := initF5Client(f5Cfg)
+		if err != nil {
+			fatal("cannot initialize f5 client: ", err)
+		}
+		f5Clients = append(f5Clients, f5Client)
 	}
 
 	p := new(pool)
 	for _, crlCfg := range cfg.CRL {
 		p.addWorker(crlCfg)
 	}
-	if err := p.startAll(f5Client, newLogger(os.Stderr)); err != nil {
+	if err := p.startAll(f5Clients, newLogger(os.Stderr)); err != nil {
 		fatal("cannot start workers: ", err)
 	}
 

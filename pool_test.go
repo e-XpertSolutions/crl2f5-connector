@@ -67,7 +67,9 @@ func testWorkerDoHappyPath(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err != nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err != nil {
 		t.Errorf("worker.do: unexpected error %q", err.Error())
 	}
 }
@@ -85,7 +87,9 @@ func testWorkerDoInvalidURL(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(nil); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{nil}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot fetch crl due to http error: 404 Not Found"
@@ -118,7 +122,9 @@ func testWorkerDoFailBeginTransaction(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot create request for starting a new transaction: http response error: 404 Not Found"
@@ -151,7 +157,9 @@ func testWorkerDoFailSSLCRL(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "failed to import crl file: http response error: 404 Not Found"
@@ -184,7 +192,9 @@ func testWorkerDoFailGetProfileClientSSL(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot get client ssl: http response error: 404 Not Found"
@@ -217,7 +227,9 @@ func testWorkerDoFailEditProfileClientSSL(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot modify client-ssl: http response error: 404 Not Found"
@@ -250,7 +262,9 @@ func testWorkerDoFailCommitTransaction(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot commit transaction: http response error: 404 Not Found"
@@ -283,7 +297,9 @@ func testWorkerDoFailVerify(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "client-ssl has not been updated with the newly updated crl"
@@ -316,7 +332,9 @@ func testWorkerDoFailVerifyRequest(t *testing.T) {
 		refreshDelay: 300,
 		stopCh:       make(chan struct{}),
 	}
-	if err := w.do(f5Client); err == nil {
+	l := new(bufferedLogger)
+	w.do([]*f5.Client{f5Client}, l)
+	if err := l.GetLastError(); err == nil {
 		t.Error("worker.do: expected error, got nil")
 	} else {
 		wantErr := "cannot retrieve updated client ssl profile: http response error: 500 Internal Server Error"
@@ -372,7 +390,7 @@ func testPoolStartAll(t *testing.T) {
 	}
 	f5Client.DisableCertCheck()
 
-	if err := pool.startAll(f5Client, &discardLogger{}); err != nil {
+	if err := pool.startAll([]*f5.Client{f5Client}, &discardLogger{}); err != nil {
 		t.Errorf("pool.startAll: unexpected error %q", err.Error())
 	}
 }
@@ -382,7 +400,7 @@ func testPoolStartAllNilClient(t *testing.T) {
 	if err := pool.startAll(nil, &discardLogger{}); err == nil {
 		t.Errorf("pool.startAll: expected error, got nil")
 	} else {
-		wantErr := "f5 client is nil"
+		wantErr := "f5 clients list is nil"
 		if err.Error() != wantErr {
 			t.Errorf("pool.startAll: got error %q; want %q", err.Error(), wantErr)
 		}

@@ -23,32 +23,42 @@ type worker struct {
 	stopCh chan struct{}
 }
 
-func (w *worker) run(f5Client *f5.Client, l logger) {
+func (w *worker) run(f5Clients []*f5.Client, l logger) {
 	w.stopCh = make(chan struct{})
 	go func() {
-		if err := w.do(f5Client); err != nil {
-			l.Error(err)
-		}
+		w.do(f5Clients, l)
 		for {
 			select {
 			case <-time.After(w.refreshDelay):
-				if err := w.do(f5Client); err != nil {
-					l.Error(err)
-				}
+				w.do(f5Clients, l)
 			case <-w.stopCh:
-				//log.Print("stop signal received")
+				l.Notice("stop signal received, terminating worker routine")
 				return
 			}
 		}
 	}()
 }
 
-func (w *worker) do(f5Client *f5.Client) error {
+func (w *worker) do(f5Clients []*f5.Client, l logger) {
+	// Make sure no panic will interrupt the program.
+	defer func() {
+		if r := recover(); r != nil {
+			l.Error("panic recovered: ", r)
+		}
+	}()
 	crl, err := fetchCRL(w.url)
 	if err != nil {
-		return err
+		l.Error(err)
+		return
 	}
+	for _, f5Client := range f5Clients {
+		if err := w.pushCRLToClients(f5Client, crl); err != nil {
+			l.Error(err)
+		}
+	}
+}
 
+func (w *worker) pushCRLToClients(f5Client *f5.Client, crl []byte) error {
 	tx, err := f5Client.Begin()
 	if err != nil {
 		return err
@@ -115,12 +125,15 @@ func (p *pool) addWorker(cfg crlConfig) {
 	})
 }
 
-func (p *pool) startAll(f5Client *f5.Client, l logger) error {
-	if f5Client == nil {
-		return errors.New("f5 client is nil")
+func (p *pool) startAll(f5Clients []*f5.Client, l logger) error {
+	if f5Clients == nil {
+		return errors.New("f5 clients list is nil")
+	}
+	if len(f5Clients) == 0 {
+		return errors.New("f5 clients list is empty")
 	}
 	for _, w := range p.workers {
-		w.run(f5Client, l)
+		w.run(f5Clients, l)
 	}
 	return nil
 }
