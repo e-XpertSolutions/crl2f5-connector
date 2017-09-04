@@ -1,0 +1,21 @@
+[f5]
+auth_method = "basic"
+url = "https://bigip-host"
+user = "admin"
+password = "admin"
+ssl_check = false
+
+[[crl]]
+# URL to fetch the CRL file.
+url = "https://pki.example.com/example.crl"
+
+# Base name for the uploaded CRL file on the BigIP
+name = "test"
+
+# Client SSL profile name
+profile_name = "clientssl-example"
+
+# Refresh every 6 hours
+refresh_delay = "6h"
+
+validate = true
