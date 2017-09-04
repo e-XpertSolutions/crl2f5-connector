@@ -151,3 +151,40 @@ func testReadConfigFailDecode(t *testing.T, invalidFile *os.File) {
 		t.Errorf("readConfig(%q): got error %q; want %q", path, err.Error(), wantErr)
 	}
 }
+
+func TestConfig_HasCRLDitstibutionPoint(t *testing.T) {
+	tests := []struct {
+		cfg  config
+		want bool
+	}{
+		{
+			cfg: config{
+				CRL: nil,
+			},
+			want: false,
+		},
+		{
+			cfg: config{
+				CRL: []crlConfig{},
+			},
+			want: false,
+		},
+		{
+			cfg: config{
+				CRL: []crlConfig{},
+			},
+			want: false,
+		},
+		{
+			cfg: config{
+				CRL: []crlConfig{{}},
+			},
+			want: true,
+		},
+	}
+	for i, test := range tests {
+		if got := test.cfg.hasCRLDistributionPoint(); got != test.want {
+			t.Errorf("%d. config.hasCRLDistributionPoint: got %v; want %v", i, got, test.want)
+		}
+	}
+}

@@ -15,16 +15,17 @@ type crlConfig struct {
 	Validate     bool     `toml:"validate"`
 }
 
-type config struct {
-	F5 struct {
-		AuthMethod        string `toml:"auth_method"`
-		URL               string `toml:"url"`
-		User              string `toml:"user"`
-		Password          string `toml:"password"`
-		SSLCheck          bool   `toml:"ssl_check"`
-		LoginProviderName string `toml:"login_provided_name"`
-	} `toml:"f5"`
+type f5Config struct {
+	AuthMethod        string `toml:"auth_method"`
+	URL               string `toml:"url"`
+	User              string `toml:"user"`
+	Password          string `toml:"password"`
+	SSLCheck          bool   `toml:"ssl_check"`
+	LoginProviderName string `toml:"login_provided_name"`
+}
 
+type config struct {
+	F5  f5Config    `toml:"f5"`
 	CRL []crlConfig `toml:"crl"`
 }
 
@@ -41,4 +42,10 @@ func readConfig(path string) (*config, error) {
 	}
 
 	return &cfg, nil
+}
+
+// hasCRLDistributionPoint reports whether the config defines at least one CRL
+// distribution point.
+func (c config) hasCRLDistributionPoint() bool {
+	return c.CRL != nil && len(c.CRL) > 0
 }
