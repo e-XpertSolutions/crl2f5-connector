@@ -361,7 +361,8 @@ func TestWorker_Stop(t *testing.T) {
 
 func TestPool_StartAll(t *testing.T) {
 	t.Run("Happy Path", testPoolStartAll)
-	t.Run("F5 Client nil", testPoolStartAllNilClient)
+	t.Run("F5 Clients nil", testPoolStartAllNilClients)
+	t.Run("Empty F5 Clients", testPoolStartAllEmptyClients)
 }
 
 func testPoolStartAll(t *testing.T) {
@@ -395,12 +396,24 @@ func testPoolStartAll(t *testing.T) {
 	}
 }
 
-func testPoolStartAllNilClient(t *testing.T) {
+func testPoolStartAllNilClients(t *testing.T) {
 	pool := &pool{}
 	if err := pool.startAll(nil, &discardLogger{}); err == nil {
 		t.Errorf("pool.startAll: expected error, got nil")
 	} else {
 		wantErr := "f5 clients list is nil"
+		if err.Error() != wantErr {
+			t.Errorf("pool.startAll: got error %q; want %q", err.Error(), wantErr)
+		}
+	}
+}
+
+func testPoolStartAllEmptyClients(t *testing.T) {
+	pool := &pool{}
+	if err := pool.startAll([]*f5.Client{}, &discardLogger{}); err == nil {
+		t.Errorf("pool.startAll: expected error, got nil")
+	} else {
+		wantErr := "f5 clients list is empty"
 		if err.Error() != wantErr {
 			t.Errorf("pool.startAll: got error %q; want %q", err.Error(), wantErr)
 		}
