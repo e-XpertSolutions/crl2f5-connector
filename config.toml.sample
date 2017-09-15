@@ -1,4 +1,4 @@
-[f5]
+[[f5]]
 auth_method = "basic"
 url = "https://bigip-host"
 user = "admin"
