@@ -4,6 +4,12 @@
 [![Travis](https://travis-ci.org/e-XpertSolutions/crl2f5-connector.svg?branch=master)](https://travis-ci.org/e-XpertSolutions/crl2f5-connector)
 
 
+`crl2f5-connector` is a small service that fetches at a regular interval a CRL
+from its distribution point in order to upload it on possibly multiple F5 BigIP
+instances. Once uploaded, the LTM client SSL profile defined in the
+configuration file is updated with that new CRL file.
+
+
 ## Contributing
 
 Contributions are greatly appreciated. The project follows the typical
