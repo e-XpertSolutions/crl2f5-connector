@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg?style=flat)](https://github.com/e-XpertSolutions/crl2f5-connector/blob/master/LICENSE)
 [![Travis](https://travis-ci.org/e-XpertSolutions/crl2f5-connector.svg?branch=master)](https://travis-ci.org/e-XpertSolutions/crl2f5-connector)
+[![GoReport](https://goreportcard.com/badge/github.com/e-XpertSolutions/crl2f5-connector)](https://goreportcard.com/report/github.com/e-XpertSolutions/crl2f5-connector)
 
 
 `crl2f5-connector` is a small service that fetches at a regular interval a CRL
